@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Activity, AlertTriangle, CheckCircle2, Clock, GitBranch, KeyRound, Play, RotateCcw, ShieldCheck, SlidersHorizontal, Wallet, Webhook } from "lucide-react";
+import kiteMark from "./assets/brand/kite-logo-mark-black.png";
 import { fallbackApprovals, fallbackRuns, fallbackWorkflows, fetchApprovals, fetchRuns, fetchWorkflows, type Approval, type Run, type Workflow } from "./lib/api";
 
 function classNames(...values: Array<string | false | undefined>) {
@@ -7,11 +8,7 @@ function classNames(...values: Array<string | false | undefined>) {
 }
 
 function KiteLogo() {
-  return (
-    <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-kite-sand bg-kite-brown text-sm font-bold text-kite-cream">
-      KA
-    </div>
-  );
+  return <img className="h-10 w-10 object-contain" src={kiteMark} alt="Kite logo mark" />;
 }
 
 function PreviewBadge({ label = "PREVIEW" }: { label?: string }) {
@@ -76,8 +73,8 @@ function SiteHeader({ activePath }: { activePath: string }) {
         <a className="flex items-center gap-3" href="/">
           <KiteLogo />
           <div>
-            <div className="text-base font-bold text-kite-brown">KiteAutomation Studio</div>
-            <div className="font-mono text-xs font-semibold text-muted-foreground">AUTOMATION</div>
+            <div className="kite-brand-word text-lg font-bold text-kite-brown">KiteAutomation Studio</div>
+            <div className="text-xs font-bold uppercase text-muted-foreground">AUTOMATION</div>
           </div>
         </a>
         <nav className="hidden items-center gap-1 lg:flex">
@@ -148,7 +145,7 @@ function HomePage({ workflows, runs, approvals }: { workflows: Workflow[]; runs:
     <>
       <section className="rounded-xl border border-border bg-secondary p-8">
         <PreviewBadge label="PREVIEW HONESTY" />
-        <h1 className="mt-6 max-w-4xl text-6xl font-bold tracking-tight text-kite-brown">Build automations for the agent economy on Kite AI.</h1>
+        <h1 className="mt-6 max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-kite-brown">Build automations for the agent economy on Kite AI.</h1>
         <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">Wire on-chain triggers, conditions, advisory agent decisions, approval-gated Kite payments, webhooks, retries, and audit logs without pretending simulated execution is mainnet production.</p>
         <div className="mt-7 flex flex-wrap gap-3">
           <a href="/workflows/new"><Button><Play size={16} /> New workflow</Button></a>

@@ -4,6 +4,12 @@ KiteAutomation Studio is a Zapier-style automation workspace for Kite AI agents.
 
 This repository is built from the staged OpenCode prompt pack in `prompts/`.
 
+## Proof of Work
+
+- Live Vercel deployment: https://kiteautomation-studio.vercel.app
+- Public proof report: [docs/PROOF_OF_WORK.md](docs/PROOF_OF_WORK.md)
+- Rendered screenshot: [docs/screenshot.jpg](docs/screenshot.jpg)
+
 ## What is real
 
 - Vite + React + TypeScript frontend with all required product routes.

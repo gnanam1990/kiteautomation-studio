@@ -1,11 +1,4 @@
 {
   "installCommand": "pnpm install --frozen-lockfile=false",
-  "buildCommand": "pnpm --filter @kiteautomation/web build",
-  "outputDirectory": "packages/web/dist",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/"
-    }
-  ]
+  "buildCommand": "node scripts/vercel-build.mjs"
 }

@@ -7,10 +7,20 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@hono/node-server':
+        specifier: ^1.19.6
+        version: 1.19.14(hono@4.12.23)
+      hono:
+        specifier: ^4.10.7
+        version: 4.12.23
     devDependencies:
       '@types/node':
         specifier: ^24.10.2
         version: 24.13.1
+      esbuild:
+        specifier: ^0.27.7
+        version: 0.27.7
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -23,9 +33,15 @@ importers:
       '@hono/node-server':
         specifier: ^1.19.6
         version: 1.19.14(hono@4.12.23)
+      '@kiteautomation/connectors':
+        specifier: workspace:*
+        version: link:../connectors
       '@kiteautomation/core':
         specifier: workspace:*
         version: link:../core
+      '@kiteautomation/worker':
+        specifier: workspace:*
+        version: link:../worker
       hono:
         specifier: ^4.10.7
         version: 4.12.23

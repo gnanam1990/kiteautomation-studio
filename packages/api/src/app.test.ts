@@ -24,5 +24,32 @@ describe("api", () => {
     expect(replay.status).toBe(201);
     expect((await replay.json()).run.status).toBe("queued");
   });
+  it("exposes service metadata on /meta", async () => {
+    const response = await app.request("/meta");
+    expect(response.status).toBe(200);
+    expect((await response.json()).service).toBe("kiteautomation-studio");
+  });
+
+  it("returns a chain stats payload for the mainnet network", async () => {
+    const response = await app.request("/chain/stats");
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.network).toBe("mainnet");
+    expect(body.chainId).toBe(2366);
+  });
+
+  it("simulates a run through the worker runtime", async () => {
+    const response = await app.request("/runs/simulate", { method: "POST" });
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body.run).toBeTruthy();
+    expect(body.preview).toBe(true);
+  });
+
+  it("returns JSON 404 for unknown routes", async () => {
+    const response = await app.request("/does-not-exist");
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: "Not found" });
+  });
 });
 

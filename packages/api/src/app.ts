@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { assertEvmAddress } from "@kiteautomation/core";
+import { AutomationRuntime } from "@kiteautomation/worker";
+import { getChainStats } from "./chain.js";
 import { addWorkflow, approvals, replayWorkflowRun, runs, testWorkflow, workflows } from "./data.js";
 
 export const app = new Hono();
@@ -76,3 +78,33 @@ app.post("/webhooks/:triggerId", async (c) => {
   });
 });
 
+// Product/service metadata.
+app.get("/meta", (c) => c.json({ service: "kiteautomation-studio", product: "KiteAutomation Studio", preview: true }));
+
+// Real Kite Mainnet read via the connectors package. Degrades to a preview-safe
+// payload (HTTP 200) if chain infrastructure is unreachable, so clients never break.
+app.get("/chain/stats", async (c) => {
+  try {
+    return c.json(await getChainStats());
+  } catch (error) {
+    return c.json({
+      network: "mainnet",
+      chainId: 2366,
+      live: false,
+      preview: true,
+      error: error instanceof Error ? error.message : "chain read failed",
+    });
+  }
+});
+
+// Worker-backed preview run simulation. Exercises the AutomationRuntime worker.
+app.post("/runs/simulate", (c) => {
+  const workflow = workflows[0];
+  if (!workflow) return c.json({ error: "No workflows to simulate" }, 404);
+  const runtime = new AutomationRuntime();
+  runtime.enqueue({ workflow, input: { source: "preview" } });
+  return c.json({ run: runtime.tick(), preview: true }, 201);
+});
+
+app.notFound((c) => c.json({ error: "Not found" }, 404));
+app.onError((error, c) => c.json({ error: error instanceof Error ? error.message : "Internal error" }, 500));

@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.6",
+    "@kiteautomation/connectors": "workspace:*",
     "@kiteautomation/core": "workspace:*",
+    "@kiteautomation/worker": "workspace:*",
     "hono": "^4.10.7"
   },
   "devDependencies": {
@@ -21,4 +23,3 @@
     "vitest": "^3.2.4"
   }
 }
-

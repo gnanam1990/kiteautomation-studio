@@ -1,40 +1,56 @@
 # KiteAutomation Studio
 
-KiteAutomation Studio is a Zapier-style automation workspace for Kite AI agents. It gives builders a single place to define on-chain triggers, conditions, advisory agent decisions, approval-gated actions, retries, and audit logs.
+[![CI](https://github.com/gnanam1990/kiteautomation-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/gnanam1990/kiteautomation-studio/actions/workflows/ci.yml)
 
-This repository is built from the staged OpenCode prompt pack in `prompts/`.
+Zapier-style automation studio for Kite AI agent workflows.
 
-## Proof of Work
+This repository is built from the staged prompt pack in [`prompts/`](prompts/).
 
-- Live Vercel deployment: https://kiteautomation-studio.vercel.app
-- Public proof report: [docs/PROOF_OF_WORK.md](docs/PROOF_OF_WORK.md)
-- Rendered screenshot: [docs/screenshot.jpg](docs/screenshot.jpg)
+## Product promise
+
+Build automations that connect Kite on-chain events to safe, approval-gated agent actions:
+triggers, conditions, advisory decisions, explicit approvals, and replayable runs.
+
+## Live
+
+- App: https://kiteautomation-studio.vercel.app
+- API: https://kiteautomation-studio.vercel.app/api/health
+- Live chain read: https://kiteautomation-studio.vercel.app/api/chain/stats
+- Proof report: [docs/PROOF_OF_WORK.md](docs/PROOF_OF_WORK.md) · screenshot: [docs/screenshot.jpg](docs/screenshot.jpg)
 
 ## What is real
 
-- Vite + React + TypeScript frontend with all required product routes.
-- Hono API with workflow, run, approval, replay, webhook, and health endpoints.
-- Pure TypeScript workflow engine in `packages/core`.
-- Worker runtime simulation in `packages/worker`.
-- Kite constants, KiteScan helper, cached fetch, and RPC helper in `packages/connectors`.
-- Tests for validation, workflow safety, API routes, and worker execution.
+- Vite + React 19 + TypeScript frontend with workflows, runs, approvals, connectors, and settings.
+- Hono API **deployed live** as a Vercel Serverless Function at `/api` (not just local dev).
+- **Real Kite Mainnet read** at `GET /api/chain/stats` — live block height over JSON-RPC (`viem`) plus
+  gas/network stats from the KiteScan explorer, surfaced in the app's live-network strip.
+- Pure TypeScript core for Kite-safe validation, run/approval modelling, and risk policy.
+- `AutomationRuntime` worker wired into the live API at `POST /api/runs/simulate`.
+- Tests for core, API routes (incl. chain + worker), and worker execution.
 
 ## What is PREVIEW
 
-- Agent decisions are advisory and seeded locally.
-- Payment and fund-moving actions always require explicit approval and are not auto-executed.
-- Webhook encryption is represented by env-only secret handling in this MVP.
-- KiteScan/RPC connectors are provided, but this app does not claim official contract integrations.
+- The app degrades gracefully: if the live API is unreachable, the frontend renders from bundled preview data.
+- Agentic decisions, payment verification, and fund movement are preview-safe unless verified by backend code.
+- Client-submitted payment claims are not trusted. Fund-moving or risky actions require explicit approval.
 
-## Structure
+## API endpoints
 
-```txt
-packages/web/          Vite + React 19 frontend
-packages/api/          Hono API server
-packages/worker/       background jobs and runtime simulation
-packages/core/         pure TypeScript workflow domain logic
-packages/connectors/   KiteScan, RPC, webhook, LLM, wallet/API connectors
-```
+Base path in production is `/api` (same-origin); base path in local dev is `http://localhost:8787`.
+
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `/health` | Service health probe. |
+| GET | `/meta` | Service metadata. |
+| GET | `/workflows` · POST | List / create workflows. |
+| GET | `/workflows/:id` | Fetch a workflow. |
+| POST | `/workflows/:id/test` | Test-run a workflow (preview). |
+| GET | `/runs` | Run log. |
+| POST | `/runs/:id/replay` | Replay a run. |
+| POST | `/runs/simulate` | Simulate a run through the worker runtime. |
+| GET | `/approvals` · POST `/:id/approve`·`/deny` | Approvals inbox. |
+| GET | `/chain/stats` | **Live** Kite Mainnet block height + gas. |
+| POST | `/webhooks/:triggerId` | Preview webhook intake. |
 
 ## Run locally
 
@@ -43,39 +59,27 @@ pnpm install
 pnpm dev
 ```
 
-Frontend: `http://localhost:5173`
-
-API: `http://localhost:8787`
-
-Health check:
+Frontend: `http://localhost:5173` · API: `http://localhost:8787`
 
 ```bash
-curl http://localhost:8787/health
-```
-
-Expected:
-
-```json
-{ "ok": true, "service": "kiteautomation-studio" }
+curl http://localhost:8787/health         # { "ok": true, "service": "kiteautomation-studio" }
+curl http://localhost:8787/chain/stats     # live Kite Mainnet block height + gas
 ```
 
 ## Verification
 
 ```bash
 pnpm -r typecheck
-pnpm -r lint
 pnpm -r test
-grep -rn "Instrument\|font-instrument\|font-serif" packages/web/src packages/web/index.html
-grep -rn "violet\|indigo\|cyan\|#7C3AED\|#4F46E5\|#06B6D4" packages/web/src
+pnpm --filter @kiteautomation/web build
 ```
 
-The two grep commands should return zero hits.
+## Deployment
 
-## Safety model
+Vercel auto-deploys `main` via the Build Output API (`scripts/vercel-build.mjs`): the SPA is served
+statically and `server/index.ts` is esbuild-bundled into a self-contained `/api` serverless function.
+The frontend calls same-origin `/api` in production and falls back to bundled preview data on any error.
 
-- Client-submitted payment claims are never trusted.
-- Any fund-moving action is marked `requiresApproval`.
-- Every workflow run records an audit trail.
-- LLM steps are advisory unless approved.
-- PREVIEW labels are shown for incomplete, simulated, unaudited, or heuristic features.
+## License
 
+[MIT](LICENSE) © 2026 Gnanam (gnanam1990)

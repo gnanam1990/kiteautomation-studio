@@ -15,7 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import kiteMark from "./assets/brand/kite-logo-mark-black.png";
-import { fallbackApprovals, fallbackRuns, fallbackWorkflows, fetchApprovals, fetchRuns, fetchWorkflows, type Approval, type Run, type Workflow, fetchChainStats, type ChainStats } from "./lib/api";
+import { createWorkflow, fallbackApprovals, fallbackRuns, fallbackWorkflows, fetchApprovals, fetchRuns, fetchWorkflows, type Approval, type Run, type Workflow, fetchChainStats, type ChainStats } from "./lib/api";
 
 function cx(...values: Array<string | false | undefined>) {
   return values.filter(Boolean).join(" ");
@@ -140,7 +140,46 @@ function WorkflowsPage({ workflows }: { workflows: Workflow[] }) {
 }
 
 function NewWorkflowPage() {
-  return <div className="grid gap-5"><SectionTitle icon={Play} title="New workflow" body="Draft a trigger, conditions, advisory decision, and explicit approval policy before any action executes." /><Surface><div className="grid gap-4 md:grid-cols-2"><label className="text-sm font-bold text-kite-brown">Workflow name<input className="mt-2 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm" defaultValue="Agent service payment monitor" /></label><label className="text-sm font-bold text-kite-brown">Trigger type<select className="mt-2 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm" defaultValue="kitescan-transfer"><option value="kitescan-transfer">KiteScan transfer</option><option value="webhook">Signed webhook</option></select></label></div><textarea className="mt-4 min-h-28 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm" defaultValue="When a KITE payment is above policy threshold, classify risk and queue explicit human approval." /></Surface></div>;
+  const [name, setName] = useState("Agent service payment monitor");
+  const [description, setDescription] = useState("When a KITE payment is above policy threshold, classify risk and queue explicit human approval.");
+  const [owner, setOwner] = useState("0xe1844c5D63a9543023008D332Bd3d2e6f1FE1043");
+  const [state, setState] = useState<{ kind: "idle" | "saving" | "ok" | "error"; message?: string; workflow?: Workflow }>({ kind: "idle" });
+  const fieldClass = "mt-2 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-kite-brown";
+
+  async function submit() {
+    if (!name.trim() || !description.trim() || !owner.trim()) {
+      setState({ kind: "error", message: "Name, description, and owner are required." });
+      return;
+    }
+    setState({ kind: "saving" });
+    try {
+      const workflow = await createWorkflow({ name, description, owner });
+      setState({ kind: "ok", workflow });
+    } catch (error) {
+      setState({ kind: "error", message: error instanceof Error ? error.message : "Create failed" });
+    }
+  }
+
+  return (
+    <div className="grid gap-5">
+      <a href="/workflows" className="text-sm font-bold text-muted-foreground">&larr; Back to workflows</a>
+      <SectionTitle icon={Play} title="New workflow" body="Draft the workflow, owner, and description. Submitting posts to the live API." />
+      <Surface>
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="text-sm font-bold text-kite-brown">Workflow name<input className={fieldClass} value={name} onChange={(e) => setName(e.target.value)} /></label>
+          <label className="text-sm font-bold text-kite-brown">Owner (EVM address)<input className={`${fieldClass} font-mono`} value={owner} onChange={(e) => setOwner(e.target.value)} /></label>
+        </div>
+        <label className="mt-4 block text-sm font-bold text-kite-brown">Description<textarea className={`${fieldClass} min-h-28`} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button type="button" onClick={submit} disabled={state.kind === "saving"} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground disabled:opacity-60">
+            {state.kind === "saving" ? "Creating…" : "Create workflow"}
+          </button>
+          {state.kind === "ok" && <span className="text-sm font-bold text-[#45543f]">✓ Created {state.workflow?.name} ({state.workflow?.id}) — <a className="underline" href="/workflows">view all</a></span>}
+          {state.kind === "error" && <span className="text-sm font-bold text-kite-rust">{state.message}</span>}
+        </div>
+      </Surface>
+    </div>
+  );
 }
 
 function WorkflowDetailPage({ workflows }: { workflows: Workflow[] }) {

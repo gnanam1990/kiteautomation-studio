@@ -125,6 +125,19 @@ export function fetchWorkflows() {
   return getJson<{ workflows: Workflow[] }>("/workflows", { workflows: fallbackWorkflows });
 }
 
+export async function createWorkflow(input: { name: string; description: string; owner: string }): Promise<Workflow> {
+  if (!apiBase) throw new Error("API is not configured");
+  const response = await fetch(`${apiBase}/workflows`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const data = (await response.json().catch(() => ({}))) as { workflow?: Workflow; error?: string };
+  if (!response.ok) throw new Error(data.error ?? `Create failed (${response.status})`);
+  if (!data.workflow) throw new Error("Malformed response from API");
+  return data.workflow;
+}
+
 export function fetchRuns() {
   return getJson<{ runs: Run[] }>("/runs", { runs: fallbackRuns });
 }

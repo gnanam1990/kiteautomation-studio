@@ -121,8 +121,36 @@ export const fallbackApprovals: Approval[] = [
   },
 ];
 
-export function fetchWorkflows() {
-  return getJson<{ workflows: Workflow[] }>("/workflows", { workflows: fallbackWorkflows });
+// The serverless API is stateless, so workflows created in the UI are also kept
+// in localStorage and merged into the list. This makes the create flow actually
+// complete: a new workflow shows up in the list and survives a reload.
+const createdKey = "kite:created:kiteautomation-studio";
+
+function loadCreated(): Workflow[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(createdKey);
+    return raw ? (JSON.parse(raw) as Workflow[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function rememberCreated(workflow: Workflow) {
+  if (typeof window === "undefined") return;
+  try {
+    const next = [workflow, ...loadCreated().filter((entry) => entry.id !== workflow.id)].slice(0, 25);
+    window.localStorage.setItem(createdKey, JSON.stringify(next));
+  } catch {
+    // localStorage unavailable (private mode, quota) — non-fatal.
+  }
+}
+
+export async function fetchWorkflows() {
+  const created = loadCreated();
+  const result = await getJson<{ workflows: Workflow[] }>("/workflows", { workflows: fallbackWorkflows });
+  const ids = new Set(result.workflows.map((workflow) => workflow.id));
+  return { workflows: [...created.filter((workflow) => !ids.has(workflow.id)), ...result.workflows] };
 }
 
 export async function createWorkflow(input: { name: string; description: string; owner: string }): Promise<Workflow> {
@@ -135,6 +163,7 @@ export async function createWorkflow(input: { name: string; description: string;
   const data = (await response.json().catch(() => ({}))) as { workflow?: Workflow; error?: string };
   if (!response.ok) throw new Error(data.error ?? `Create failed (${response.status})`);
   if (!data.workflow) throw new Error("Malformed response from API");
+  rememberCreated(data.workflow);
   return data.workflow;
 }
 
